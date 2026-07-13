@@ -84,9 +84,9 @@ const siteConfigs: Record<string, CrawlConfig> = {
       dataUrls: ['apis/ui/Browse'],
       modalCloseButtonSelector: 'button.do-later-btn',
       blacklistUrls: [
-          'apis/ui/Browse/v2/SponsoredAds',
+          'https://api.bws.com.au/apis/ui/Browse/v2/SponsoredAds$',
       ],
-      nextButtonSelector: 'a.btn-secondary, a.btn--full-width, button.action-btn',
+      nextButtonSelector: 'a.btn-secondary, a.btn--full-width',
       maxPages: 200,
   },
   'firstchoice.com.au': {
@@ -109,12 +109,13 @@ const siteConfigs: Record<string, CrawlConfig> = {
 
 // Launch the browser and open a new blank page
 const browser = await puppeteer.use(StealthPlugin()).launch({ 
-    headless: true, 
+    headless: true,
     args: [
         '--no-sandbox', 
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage', 
-        '--start-maximized'
+        '--disable-dev-shm-usage',
+        '--window-size=1920,1080', // Ép kích thước cửa sổ ảo của Chrome về chuẩn Full HD Desktop
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' // Giả lập User-Agent sạch
     ] 
 });
 
@@ -203,6 +204,14 @@ async function crawlSite(config: CrawlConfig) {
         const sleepTime = Math.round((config.sleepTime || DEFAULT_SLEEP_TIME) * (0.7 + 0.3 * Math.random()));
         console.log(`Waiting for ${sleepTime}ms...`);
         await sleep(sleepTime);
+
+        if (config.outputDir === 'bws.com.au') {
+          console.log("Đang chủ động cuộn xuống để kích hoạt Angular render nút cho BWS...");
+          await page.evaluate(() => {
+            window.scrollTo(0, document.body.scrollHeight - 1200);
+          });
+          await sleep(2000); // Chờ 2s cho nút kịp sinh ra trong DOM
+        }
 
         // 1. Tìm nút Next và đưa nó vào GIỮA màn hình (block: 'center')
         const nextButtonFound = await page.evaluate((selector) => {
