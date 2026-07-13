@@ -86,7 +86,7 @@ const siteConfigs: Record<string, CrawlConfig> = {
       blacklistUrls: [
           'apis/ui/Browse/v2/SponsoredAds',
       ],
-      nextButtonSelector: 'a.btn-secondary, a::-p-text(Load More), button.action-btn',
+      nextButtonSelector: 'a.btn-secondary, a.btn--full-width, button.action-btn',
       maxPages: 200,
   },
   'firstchoice.com.au': {
