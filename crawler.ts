@@ -108,8 +108,15 @@ const siteConfigs: Record<string, CrawlConfig> = {
 }
 
 // Launch the browser and open a new blank page
-const browser = await puppeteer.use(StealthPlugin())
-                               .launch({ headless: false, args: ['--start-maximized'] });
+const browser = await puppeteer.use(StealthPlugin()).launch({ 
+    headless: true, 
+    args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', 
+        '--start-maximized'
+    ] 
+});
 
 async function openPage(url: string) {
   const page = await browser.newPage();
