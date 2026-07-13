@@ -81,12 +81,12 @@ const siteConfigs: Record<string, CrawlConfig> = {
           'https://bws.com.au/spirits/gin',
           'https://bws.com.au/spirits/premixed-drinks'
       ],
-      dataUrls: ['^https://api\.bws\.com\.au/apis/ui/Browse'],
+      dataUrls: ['apis/ui/Browse.*pageNumber='],
       modalCloseButtonSelector: 'button.do-later-btn',
       blacklistUrls: [
           'https://api.bws.com.au/apis/ui/Browse/v2/SponsoredAds$',
       ],
-      nextButtonSelector: 'a.btn.btn-secondary.btn--full-width.ng-scope',
+      nextButtonSelector: 'button.action-btn',
       maxPages: 200,
   },
   'firstchoice.com.au': {
