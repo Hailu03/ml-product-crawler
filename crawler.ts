@@ -198,6 +198,7 @@ async function crawlSite(config: CrawlConfig) {
     }
 
     let pageCount = 0;
+    let consecutiveNoDataCount = 0; // 🔥 THÊM BIẾN NÀY ĐỂ ĐẾM SỐ TRANG KHÔNG CÓ DATA
 
     while (pageCount++ < maxPages - 1) {
       try {
@@ -205,15 +206,13 @@ async function crawlSite(config: CrawlConfig) {
         console.log(`Waiting for ${sleepTime}ms...`);
         await sleep(sleepTime);
 
+        // Đoạn cuộn trang của BWS giữ nguyên...
         if (config.outputDir === 'bws.com.au') {
-          console.log("Đang chủ động cuộn xuống để kích hoạt Angular render nút cho BWS...");
-          await page.evaluate(() => {
-            window.scrollTo(0, document.body.scrollHeight - 1200);
-          });
-          await sleep(2000); // Chờ 2s cho nút kịp sinh ra trong DOM
+          await page.evaluate(() => { window.scrollTo(0, document.body.scrollHeight - 1200); });
+          await sleep(2000);
         }
 
-        // 1. Tìm nút Next và đưa nó vào GIỮA màn hình (block: 'center')
+        // 1. Tìm nút Next
         const nextButtonFound = await page.evaluate((selector) => {
           const btn = document.querySelector(selector) as HTMLElement;
           if (btn) {
@@ -228,15 +227,33 @@ async function crawlSite(config: CrawlConfig) {
           break;
         }
 
-        await sleep(1500); // Chờ 1.5s để trang ổn định sau khi cuộn
+        await sleep(1500);
 
-        // 2. Ép click bằng JavaScript (Xuyên thấu mọi vật cản)
+        // TRƯỚC KHI CLICK: Lưu lại số lượng file hiện tại để check xem click xong có data mới không
+        const currentCounter = counter; 
+
+        // 2. Ép click bằng JavaScript
         await page.evaluate((selector) => {
           const btn = document.querySelector(selector) as HTMLElement;
           btn?.click();
         }, config.nextButtonSelector);
 
         console.log(`Đã ép click chuyển trang thành công!`);
+        await sleep(3000); // Chờ 3s cho XHR phản hồi nếu có
+
+        // KIỂM TRA: Nếu sau khi click mà biến counter không tăng (tức là không bắt được API Browse mới)
+        if (counter === currentCounter) {
+          consecutiveNoDataCount++;
+          console.log(`⚠️ Trang này không trả về dữ liệu mới (Lần bị hụt: ${consecutiveNoDataCount}/3)`);
+        } else {
+          consecutiveNoDataCount = 0; // Reset nếu có data
+        }
+
+        // Nếu 3 trang liên tiếp bấm nút mà website không nhả thêm sản phẩm -> Chắc chắn đã hết trang thật!
+        if (consecutiveNoDataCount >= 3) {
+          console.log("🛑 Phát hiện danh mục đã hết sản phẩm thực tế. Tự động chuyển danh mục!");
+          break; 
+        }
 
       } catch (error) {
         console.error('Lỗi khi chuyển trang:', error);
