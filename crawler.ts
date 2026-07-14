@@ -51,7 +51,7 @@ const siteConfigs: Record<string, CrawlConfig> = {
       dataUrls: ['^https://www\.liquorland\.com\.au/api/partset/', '^https://www\.liquorland\.com\.au/api/products/'],
       modalCloseButtonSelector: 'button.ModalOverlay-CloseButton',
       nextButtonSelector: 'a.btnNext',
-      maxPages: 200,
+      maxPages: 2,
   },
   'bws.com.au': {
       outputDir: 'bws.com.au',
