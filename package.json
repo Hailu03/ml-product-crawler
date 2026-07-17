@@ -2,12 +2,14 @@
   "name": "product-cralwer",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/mssql": "^12.3.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "mssql": "^12.7.0",
     "pdfkit": "^0.17.1",
     "puppeteer": "^24.8.2",
     "puppeteer-extra": "^3.3.6",

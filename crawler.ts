@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { sleep } from 'bun';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { importSite } from './db-import';
 
 const DEFAULT_MAX_PAGES = 300;
 const DEFAULT_SLEEP_TIME = 30000;// 2 * 60 * 1000;
@@ -130,7 +131,7 @@ async function openPage(url: string) {
   }, waitTime);
 }
 
-async function crawlSite(config: CrawlConfig) {
+async function crawlSite(config: CrawlConfig): Promise<string> {
   const date = `${new Date().toISOString().split('T')[0]}`;
   const outputDir = `data/${date}/${config.outputDir}`;
   fs.mkdirSync(outputDir, { recursive: true });
@@ -263,20 +264,27 @@ async function crawlSite(config: CrawlConfig) {
   }
 
   await page.close();
+  return date;
 }
 
-if (process.argv.length >= 2) {
-  const site = process.argv[2];
+async function crawlAndImport(site: string, config: CrawlConfig) {
   console.log(`Start crawling site: ${site}`);
-  const config = siteConfigs[site];
-  await crawlSite(config);
+  const date = await crawlSite(config);
   console.log(`Finished crawling site: ${site}`);
+  // Parse dữ liệu vừa crawl và lưu vào MSSQL (lỗi DB không làm dừng các site sau)
+  try {
+    await importSite(site, date);
+  } catch (error) {
+    console.error(`[db-import] ${site} failed:`, (error as Error).message);
+  }
+}
+
+if (process.argv[2]) {
+  const site = process.argv[2];
+  await crawlAndImport(site, siteConfigs[site]);
 } else {
   for (const site in siteConfigs) {
-    const config = siteConfigs[site];
-    console.log(`Start crawling site: ${site}`);
-    await crawlSite(config);
-    console.log(`Finished crawling site: ${site}`);
+    await crawlAndImport(site, siteConfigs[site]);
   }
 }
 
