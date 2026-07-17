@@ -3,7 +3,12 @@
 # Di chuyển vào thư mục dự án
 cd /home/git/matthews/ml-product-crawler
 
+# DB server phải là hostname (không dùng IP trực tiếp vì TLS không cho phép),
+# cần dòng "207.148.80.25 warehouse-db" trong /etc/hosts
+export DB_SERVER=warehouse-db
+
 # 1. Chạy cào dữ liệu song song cho 3 trang và đợi hoàn thành
+# (crawler.ts tự parse + lưu vào MSSQL sau khi crawl xong từng site)
 /root/.bun/bin/bun run crawler.ts bws.com.au >> /var/log/crawler.log 2>&1 &
 /root/.bun/bin/bun run crawler.ts danmurphys.com.au >> /var/log/crawler.log 2>&1 &
 /root/.bun/bin/bun run crawler.ts liquorland.com.au >> /var/log/crawler.log 2>&1 &

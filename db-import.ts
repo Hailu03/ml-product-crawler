@@ -3,13 +3,15 @@ import * as path from 'path';
 import sql from 'mssql';
 
 const DB_CONFIG: sql.config = {
-  user: 'warehouse',
-  password: 'WitD1lW83V9R',
-  server: '207.148.80.25',
-  port: 1433,
-  database: 'matthewsliquor_airflow',
+  user: process.env.DB_USER || 'warehouse',
+  password: process.env.DB_PASSWORD || 'WitD1lW83V9R',
+  // TLS mới không cho ServerName là IP — nếu gặp lỗi 'Setting the TLS ServerName
+  // to an IP address is not permitted', thêm alias vào /etc/hosts rồi đặt DB_SERVER=<alias>
+  server: process.env.DB_SERVER || '207.148.80.25',
+  port: parseInt(process.env.DB_PORT || '1433', 10),
+  database: process.env.DB_NAME || 'matthewsliquor_airflow',
   options: {
-    encrypt: true,
+    encrypt: process.env.DB_ENCRYPT !== 'false',
     trustServerCertificate: true,
   },
   requestTimeout: 120000,
@@ -264,7 +266,7 @@ function parseDanMurphys(siteDir: string, files: string[]): any[] {
   return [...rows.values()];
 }
 
-function parseColes(siteDir: string, files: string[], baseUrl: string): any[] {
+function parseColes(files: string[], baseUrl: string): any[] {
   const rows = new Map<string, any>();
   for (const f of files) {
     let j: any;
@@ -367,8 +369,8 @@ export async function importSite(site: string, crawlDate: string, dataRoot = 'da
   let rows: any[];
   if (site === 'bws.com.au') rows = parseBws(siteDir, files);
   else if (site === 'danmurphys.com.au') rows = parseDanMurphys(siteDir, files);
-  else if (site === 'liquorland.com.au') rows = parseColes(siteDir, files, 'https://www.liquorland.com.au');
-  else rows = parseColes(siteDir, files, 'https://www.firstchoiceliquor.com.au');
+  else if (site === 'liquorland.com.au') rows = parseColes(files, 'https://www.liquorland.com.au');
+  else rows = parseColes(files, 'https://www.firstchoiceliquor.com.au');
 
   console.log(`[db-import] ${site}: parsed ${rows.length} unique products from ${files.length} files`);
   if (rows.length === 0) return;
